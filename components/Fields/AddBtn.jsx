@@ -1,16 +1,16 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, TouchableHighlight, View } from 'react-native'
 import React from 'react'
 
 const  AddBtn = ({props}) => {
 
   return (
-    <Pressable 
+    <TouchableHighlight 
       style={styles.addBtn}
       onPress={()=>props.toggleState()}
       
     >
       <Text style={styles.addBtnTxt}>Add Field</Text>
-    </Pressable>
+    </TouchableHighlight>
   )
 }
 const styles = StyleSheet.create({
