@@ -36,7 +36,7 @@ const forms = () => {
         ico:'eye',
         size:24,
         color:'#5a42f5',
-        action:null
+        action:() => {router.push(`/Form/${formId}/form`)}
       },
       {
         key:1,
