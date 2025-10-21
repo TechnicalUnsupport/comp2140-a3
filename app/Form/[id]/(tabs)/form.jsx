@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     backgroundColor:'lightgrey',
     padding:9,
     borderColor:'grey',
-    borderWidth:0,
+    borderWidth:1,
     borderRadius:9,
     width:'99%',
 
