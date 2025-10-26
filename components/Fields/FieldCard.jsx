@@ -1,20 +1,48 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import { TextInput } from 'react-native-gesture-handler';
+import { Picker } from '@react-native-picker/picker';
+import { interpolate } from 'react-native-reanimated';
 
 
 const FieldCard = ({data}) => {
+  // console.log(data);
+
   switch (data.field_type) {
     case 'text': return (
       <TextInput
-        
+        style={styles.textInput}
+        onChangeText={text=>data.updateRecord(text)}
+        value={data.recordData}
+        inputMode={data.options.inputMode}
+        keyboardType={data.options.keyboardType}
+        maxLength={parseInt(data.options.maxLength)}
+        placeholder={data.name}
       />
     );
     case 'multiline': return (
-      <Text>{data.name}</Text>
+      <TextInput
+        multiline
+        style={styles.textInput}
+        onChangeText={text=>data.updateRecord(text)}
+        value={data.recordData}
+        inputMode={data.options.inputMode}
+        keyboardType={data.options.keyboardType}
+        maxLength={parseInt(data.options.maxLength)}
+        numberOfLines={parseInt(data.options.numberOfLines)}
+        placeholder={data.name}
+      />
     );
     case 'dropdown': return (
-      <Text>{data.name}</Text>
+      <Picker
+        selectedValue={data.options.selectedValue}
+        onValueChange={(item)=>data.updateRecord(item.value)}
+      >
+        {data.options.values.map(val=>(
+          <Picker.Item label={val.value} value={val.value}/>
+        ))}
+      </Picker>
+      
     )
   } 
 }
@@ -27,6 +55,17 @@ const styles = StyleSheet.create({
     borderWidth:1,
     borderColor:'grey',
     borderRadius:15,
-    padding:10
+    padding:10,
+    flex:1,
+    alignItems:'center'
+  },
+  textInput:{
+    borderColor:'grey',
+    borderWidth:1,
+    borderRadius:25,
+    width:'80%',
+    padding:'5%',
+    alignSelf:'center',
+    margin:'2%'
   }
 })

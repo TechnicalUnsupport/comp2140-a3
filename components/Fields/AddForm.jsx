@@ -70,7 +70,11 @@ const AddForm = ({props}) => {
 
   const saveFunction = async () =>{
     if (field.name == '' || field.field_type == '') return;
-    const f = await apiRequest(`/field`,'POST',field);
+    try {
+      const f = await apiRequest(`/field`,'POST',field);
+    } catch (err) { 
+      console.error('could not update field',err);
+    }
     props.toggleState();
   }
 
@@ -148,7 +152,7 @@ const styles = StyleSheet.create({
     alignItems:'center',
     flexDirection:'row',
     width:'100%',
-    height:100
+    // height:100
   },
   actionBtn:{
     borderWidth:1,

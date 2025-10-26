@@ -17,10 +17,24 @@ const form = () => {
   const [currState,setCurrState] = useState(true);
 
   const [fields,setFields] = useState([]);
-  const [recordValues,setRecordValues] = useState([]);
-  const [flatListData,setFlatListData] = useState([]);
+  const [fpData,setfpData] = useState([]);
 
-  // GET form 
+  // const [record,setRecord] = useState({
+  //   form_id:id,
+  //   values:fields.map(f=>f.name)
+  // });
+
+  // const updateRecord = (index) => (data) => {
+  //   // setRecord({...record,values:record.values.map(
+  //   //   (val,idx) => (index === idx ? data : val)
+  //   // )})
+  //   setRecord({
+  //     form_id:id,
+  //     values:fields.map((f,i)=>(f.order_index === index ? data : record.values[i].val))
+  //   })
+  //   console.log(record);
+  // }
+
   useEffect(()=>{
     try {
       const fetchForm = async () => {
@@ -28,65 +42,55 @@ const form = () => {
         setFormData(f[0]);
       }
       if (id) fetchForm();
-    } catch (err) {
-      console.error('could not fetch form data',err)
-    }
+    } catch (err) {console.error('Encountered Error: ',err)}
   },[id]);
 
-  // GET fields
   useEffect(()=>{
-    if (!id) return;
-    try {
-      const fetchFields = async () => {
-        const f = await apiRequest(`/field?form_id=eq.${id}`);
-        setFields(f);
-      }
-      fetchFields();
-    } catch (err) {
-      console.err('Could not fetch fields',err);
+    const fetchFields = async () => {
+      const f = await apiRequest(`/field?form_id=eq.${id}`);
+      setFields(f);
     }
-  },[formData,currState])
+    if (id) fetchFields();
+    // setRecord({
+    //   form_id:id,
+    //   values:fields.map(f=>{return{name:f.name,val:''}})
+    // })
+    // console.log(record);
 
-  // initialize record values 
-  // NB: fields -> record.values (1-1)
-  useEffect(()=>{
-    if (fields.length === 0) return;
-    const valuesInit = fields.map(f => ({
-      idx:f.order_index,
-      value:''
-    }));
-    setRecordValues(valuesInit);
-  },[fields]);
+    
 
-  // bind for the fields to update the record values
-  // uses currying so that we can create an array of 
-  // anonymous functions for each field to call
-  const updateValue = (idx) => (val) => {
-    setRecordValues(last => 
-      last.map(v=> 
-        v.idx === idx 
-          ? {...v, value: val} // value we want to update
-          : v)                 // everything else
-    );
-  };
+  },[currState,id]);
+
   
-  // set up flatList data
-  useEffect(()=>{
-    if (fields.length === 0 || recordValues.length === 0) return;
-    const tempFLData = fields.map(f=>({
-      ...f,
-      recordData:recordValues.find(val=>val.idx === f.order_index) ?? {value:''},
-      updateRecord: updateValue(f.order_index)
-    }));
-    setFlatListData(tempFLData);
-  },[fields,recordValues])
-
-  // for saving the record
-  const saveRecord = async () => {
-    // TODO: build an actual save function
-    console.log(recordValues);
-  }
   
+
+  // const updateRecordAt = (index) => (data) => {
+  //   console.log(record);
+  //   setRecords(currRecords => 
+  //     currRecords.map((rec,idx) => 
+  //       (idx === index ? data : rec)
+  //     )
+  //   );
+  // }
+
+  useEffect(()=>{
+    if (record.values.length === 0) {
+      setRecord({
+        form_id:id,
+        values:fields.map(f=>f.name)
+      })
+    }
+    console.log(record)
+    
+
+    // shit's gettin messy but we ball
+    setfpData(fields.map((field,idx)=>{return {
+      ...field,
+      recordData:record.values[idx],
+      updateRecord:updateRecord(idx)
+    }}))
+  },[fields])
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
@@ -113,18 +117,13 @@ const form = () => {
       </ScrollView>
       
       <FlatList 
-        data={flatListData}
+        data={fpData}
         renderItem={({item}) => <FieldCard data={item}/>}
-        keyExtractor={item=>item.order_index}
+        keyExtractor={item=>item.id}
         style={styles.fieldsList}
       />
 
-      <TouchableOpacity
-        onPress={saveRecord}
-        style={styles.saveBtn}
-      >
-        <Text style={styles.saveBtnTxt}>Save Record</Text>
-      </TouchableOpacity>
+
     </View>
   )
 }
@@ -143,7 +142,7 @@ const styles = StyleSheet.create({
   container:{
     flex:1,
     alignItems:'center',
-    padding:'5%',
+    padding:'10%',
     
   },
   backBtn:{
@@ -192,15 +191,5 @@ const styles = StyleSheet.create({
     // borderColor:'red',
     // borderWidth:1,
     height:'40%'
-  },
-  saveBtn:{
-    backgroundColor:'#4a42f5',
-    padding:'4%',
-    marginTop:'5%',
-    width:'50%',
-    borderRadius:15
-  },
-  saveBtnTxt:{
-    color:'white'
   },
 })

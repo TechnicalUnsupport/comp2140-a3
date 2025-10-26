@@ -14,18 +14,26 @@ const forms = () => {
   const [forms,setForms] = useState([]);
   
   const deleteForm = async (formId) => {
-    console.log('delete called');
-    await apiRequest(`/form?id=eq.${formId}`,'DELETE');
+    try {
+      await apiRequest(`/form?id=eq.${formId}`,'DELETE');
+    } catch (err) {
+      console.error(`could not delete form ${formId}`,err);
+    }
+  
   }
+
 
   // api stuff here
   useEffect(()=>{
-    const getForms = async () => {
-      const f = await apiRequest('/form');
-      setForms(f);
+    try {
+      const getForms = async () => {
+        const f = await apiRequest('/form');
+        setForms(f);
+      }
+      getForms();
+    } catch (err) {
+      console.error('could not fetch forms',err)
     }
-    getForms();
-
   },[forms])
 
   // for card buttons
@@ -56,7 +64,6 @@ const forms = () => {
   }
 
   const DATA = forms.map(f=>{return {key:f.id,...f,...bindBuilder(f.id)}})
-
   return (
     <View style={styles.container}>
       <Pressable
