@@ -3,6 +3,7 @@ import React from 'react'
 import { TextInput } from 'react-native-gesture-handler';
 import { Picker } from '@react-native-picker/picker';
 import { interpolate } from 'react-native-reanimated';
+import LocationFIeldCard from './LocationFIeldCard';
 
 
 const FieldCard = ({data}) => {
@@ -43,7 +44,8 @@ const FieldCard = ({data}) => {
         ))}
       </Picker>
       
-    )
+    );
+    case 'location': return <LocationFIeldCard data={data} setData={data.updateRecord}/>;
   } 
 }
 

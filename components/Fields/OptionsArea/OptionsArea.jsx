@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { FlatList, Switch, TextInput } from 'react-native-gesture-handler';
 import { Picker } from '@react-native-picker/picker';
 import DropDownCard from './DropDownCard';
+import DropDownOption from './DropDownOption';
 
 const FIELDS_OPTIONS = {
   text:{
@@ -14,7 +15,7 @@ const FIELDS_OPTIONS = {
       maxLength:100
     },
     options_enum:{
-      inputMode:['none','text','decimal','numeric','tel','search','email','url'],
+      inputMode:['none','text','decimal','numeric','tel','email','url'],
       keyboardType:['default','number-pad','decimal-pad','numeric','email-address','phone-pad','url']
     }
   },
@@ -28,8 +29,8 @@ const FIELDS_OPTIONS = {
       numberOfLines:4
     },
     options_enum:{
-      inputMode:['none','text','decimal','numeric','tel','search','email','url'],
-      keyboardType:['default','number-pad','decimal-pad','numeric','email-address','phone-pad','url']
+      inputMode:['none','text','decimal','numeric'],
+      keyboardType:['default','number-pad','decimal-pad','numeric']
     }
   },
   dropdown:{
@@ -47,7 +48,34 @@ const FIELDS_OPTIONS = {
   }
 }
 
+
+
 const OptionsArea = ({field,changeField}) => {
+
+  // to ensure options display correctly
+  const sanitizeText = (fld) => {
+    const N_inputMode = ['decimal','numeric','tel'];
+    const N_keyboardType = ['number-pad','decimal-pad','numeric','phone-pad'];
+    
+    return {
+      inputMode:fld.options_enum.inputMode.filter(o=>
+        field.is_num
+        ? N_inputMode.includes(o)
+        : !N_inputMode.includes(o)
+      ),
+      keyboardType:fld.options_enum.keyboardType
+      .filter(o=>
+        field.options.inputMode === 'email' 
+        ? o === 'email-address'
+        : o !== 'email-address'
+      )
+      .filter(o=>
+        field.is_num
+        ? N_keyboardType.includes(o)
+        : !N_keyboardType.includes(o)
+      )
+    }
+  }
 
   switch (field.field_type) {
     case 'text':
@@ -112,9 +140,7 @@ const OptionsArea = ({field,changeField}) => {
                   }
                 })}
               >
-                {FIELDS_OPTIONS
-                .text
-                .options_enum
+                {sanitizeText(FIELDS_OPTIONS.text)
                 .inputMode
                 .map(f=>(
                   <Picker.Item 
@@ -140,9 +166,7 @@ const OptionsArea = ({field,changeField}) => {
                   }
                 })}
               >
-                {FIELDS_OPTIONS
-                .text
-                .options_enum
+                {sanitizeText(FIELDS_OPTIONS.text)
                 .keyboardType
                 .map(f=>(
                   <Picker.Item 
@@ -238,9 +262,7 @@ const OptionsArea = ({field,changeField}) => {
                   }
                 })}
               >
-                {FIELDS_OPTIONS
-                .multiline
-                .options_enum
+                {sanitizeText(FIELDS_OPTIONS.multiline)
                 .inputMode
                 .map(f=>(
                   <Picker.Item 
@@ -266,9 +288,7 @@ const OptionsArea = ({field,changeField}) => {
                   }
                 })}
               >
-                {FIELDS_OPTIONS
-                .multiline
-                .options_enum
+                {sanitizeText(FIELDS_OPTIONS.multiline)
                 .keyboardType
                 .map(f=>(
                   <Picker.Item 
@@ -284,53 +304,8 @@ const OptionsArea = ({field,changeField}) => {
         </View>
       );
     
-    case 'dropdown':
-      const [values,setValues] = useState([{idx:0,value:''}]);
-      const [selected,setSelected] = useState(0);
-
-      const addValue = () => {
-        // console.log('adding');
-        setValues([
-          ...values,
-          {
-            idx:values.length,
-            value:''
-          }
-        ])
-      }
-      const updateValue = (idx) => (newVal) => {
-        // console.log('updating');
-        setValues(last => last.map(v=>
-          v.idx === idx
-          ? {...v,value:newVal}
-          : v
-        ));
-      };
-      const deleteValue = (idx) => {
-        // console.log('deleting')
-        const deleted = 
-        values
-          .filter(v=> v.idx != idx)    // everything except val at idx
-          .map(v=> 
-            (v.idx > idx)
-            ? ({...v, idx: v.idx - 1}) // correct offsets
-            : v 
-          );
-        setValues(deleted);
-      }
-
-      // acts like onValueChange
-      useEffect(()=>{
-        changeField({
-          ...field,
-          options:{
-            ...field.options,
-            values:values,
-          }
-        })
-        console.log(values);
-      },[values])
-
+    case 'dropdown': return <DropDownOption field={field} changeField={changeField} />;
+    case 'location':
       return (
         <View style={styles.container}>
           <View style={styles.switchView}>
@@ -360,39 +335,6 @@ const OptionsArea = ({field,changeField}) => {
               value={field.is_num}
             />
           </View>
-
-          <View style={styles.dropDownValuesView}>
-            <Text style={styles.addValuesTtl}>Values:</Text>
-            <TouchableOpacity 
-              style={styles.addValueBtn}
-              onPress={addValue}
-            >
-              <Text style={styles.addValueBtnTxt}>Add</Text>
-            </TouchableOpacity>
-            <View>
-              {values.map(v=>(
-                <DropDownCard
-                  key={v.idx} 
-                  style={styles.textIn}
-                  data={v.value}
-                  updateData={updateValue(v.idx)}
-                  deleteData={() => deleteValue(v.idx)}
-                  idx={v.idx}
-                  sel={selected}
-                  setSel={setSelected}
-                />
-              ))} 
-            </View>
-            
-
-          </View>
-
-        </View>
-      );
-    case 'location':
-      return (
-        <View>
-          <Text>location</Text>
         </View>
       );
     default: 
@@ -452,23 +394,5 @@ const styles = StyleSheet.create({
     margin:10,
     alignSelf:'flex-start'
   },
-  dropDownValuesView:{
-    margin:5
-  },
-  addValuesTtl:{
-    fontSize:16,
-    fontWeight:'500'
-  },
-  addValueBtn:{
-    borderWidth:1,
-    borderColor:'#00b3ff',
-    borderRadius:25,
-    padding:'4%',
-    width:'40%',
-    alignSelf:'flex-start'
-  },
-  addValueBtnTxt:{
-    color:'#00b3ff',
-    textAlign:'center'
-  },
+  
 })

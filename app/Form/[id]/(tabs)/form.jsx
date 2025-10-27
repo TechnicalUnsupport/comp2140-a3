@@ -12,6 +12,7 @@ import FieldCard from '../../../../components/Fields/FieldCard';
 const form = () => {
   const router = useRouter();
   const {id} = useLocalSearchParams();
+  
 
   const [formData,setFormData] = useState({});
   const [currState,setCurrState] = useState(true);
@@ -50,7 +51,10 @@ const form = () => {
   // initialize record values 
   // NB: fields -> record.values (1-1)
   useEffect(()=>{
-    if (fields.length === 0) return;
+    if (fields.length === 0) {
+      setRecordValues([]);
+      return;
+    }
     const valuesInit = fields.map(f => ({
       idx:f.order_index,
       value:''
@@ -72,11 +76,17 @@ const form = () => {
   
   // set up flatList data
   useEffect(()=>{
-    if (fields.length === 0 || recordValues.length === 0) return;
-    const tempFLData = fields.map(f=>({
+    if (fields.length === 0 || recordValues.length === 0) {
+      setFlatListData([]);
+      return;
+    }
+    const tempFLData = fields.map(f => ({
       ...f,
-      recordData:recordValues.find(val=>val.idx === f.order_index) ?? {value:''},
-      updateRecord: updateValue(f.order_index)
+      recordData: recordValues.find(val => val.idx === f.order_index)
+        ?? { value: f.field_type === 'location'
+              ? '{"longitude":0,"latitude":0}'
+              : '' },
+      updateRecord: updateValue(f.order_index),
     }));
     setFlatListData(tempFLData);
   },[fields,recordValues])
@@ -115,7 +125,7 @@ const form = () => {
       <FlatList 
         data={flatListData}
         renderItem={({item}) => <FieldCard data={item}/>}
-        keyExtractor={item=>item.order_index}
+        keyExtractor={item=>item.order_index.toString()}
         style={styles.fieldsList}
       />
 
